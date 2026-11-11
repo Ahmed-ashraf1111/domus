@@ -161,7 +161,7 @@
     "required": "This field is required",
     "invalidPrice": "Enter a valid price",
     "imagesTitle": "Images",
-    "imagesHint": "Upload at least one image before publishing",
+    "imagesHint": "Upload at least one image before publishing. JPG, PNG or WebP, up to 4 MB each, max 4 images per upload.",
     "imagesAfterSave": "You can add images after saving the property",
     "upload": "Upload images",
     "uploading": "Uploading...",

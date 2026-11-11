@@ -55,8 +55,10 @@ function PropertyCard({ property, index = 0 }) {
 
         <div className="flex flex-col gap-3 p-4">
           <div>
-            <div className="text-lg font-semibold" dir="ltr" style={{ textAlign: "start" }}>
-              {formatPrice(p.price, p.currency, i18n.language)}
+            <div className="text-lg font-semibold">
+              <span dir="ltr" className="inline-block">
+                {formatPrice(p.price, p.currency, i18n.language)}
+              </span>
             </div>
             <h3 className="mt-1 line-clamp-1 font-medium">{p.title}</h3>
             {location && (

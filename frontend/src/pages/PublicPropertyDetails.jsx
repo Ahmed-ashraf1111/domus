@@ -316,12 +316,10 @@ function PublicPropertyDetails() {
                 {location}
               </p>
             )}
-            <div
-              className="text-2xl font-semibold text-primary"
-              dir="ltr"
-              style={{ textAlign: "start" }}
-            >
-              {formatPrice(p.price, p.currency, i18n.language)}
+            <div className="text-2xl font-semibold text-primary">
+              <span dir="ltr" className="inline-block">
+                {formatPrice(p.price, p.currency, i18n.language)}
+              </span>
             </div>
           </div>
 
