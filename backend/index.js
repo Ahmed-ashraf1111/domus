@@ -39,7 +39,7 @@ app.use("/api/dashboard", dashboardRoutes);
 const PORT = process.env.PORT || 5000;
 
 // on Vercel the platform runs the app itself, so only listen when running locally
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
