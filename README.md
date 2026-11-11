@@ -2,6 +2,8 @@
 
 Domus is a real estate management platform: a public website for browsing published properties, and a staff workspace (CRM) for managing inventory, leads, visits and deals. Admin and Agent roles see different data.
 
+A short guide for staff is available in [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
+
 Live demo (deployed on Vercel):
 
 - Frontend: https://domus-app-brown.vercel.app
@@ -30,6 +32,7 @@ Staff workspace
 - Login with JWT, protected routes and role permissions (Admin and Agent)
 - Property inventory: create, edit, publish/unpublish, delete, sale or rent, image upload with cover image
 - Leads: list, details, stages, notes and calls, preferences, assignment to an agent (Admin only)
+- Match engine: the lead details page shows the 3 best matching properties with a score out of 100 (see Match engine below)
 - Visits: schedule, status updates, conflict warning when the same agent already has a visit at that time
 - Deals: linked to property, lead and agent, with stages and an Admin override when a property is already booked
 - Dashboard with counts and charts
@@ -45,6 +48,26 @@ Permissions summary
 | Visits     | All visits            | Only the agent's own visits      |
 | Deals      | All deals             | Only the agent's own deals       |
 | Staff      | Full access           | No access                        |
+
+## Match engine
+
+`GET /api/leads/:id/matches` scores properties against the preferences saved on a lead and returns the top 3. Only properties that are published and have the status `available` in the same agency are considered. The score is out of 100 and is built from these criteria:
+
+| Criterion | Points |
+| --------- | ------ |
+| Budget    | 35     |
+| City      | 25     |
+| Type      | 20     |
+| Bedrooms  | 10     |
+| Purpose   | 10     |
+
+Rules:
+
+- A criterion the lead left empty gives full points.
+- A price up to 10 percent above the maximum budget gives half of the budget points.
+- A bedroom count that differs by exactly 1 gives half of the bedroom points.
+- City comparison is case-insensitive.
+- An agent only gets matches for leads assigned to him.
 
 ## Tech stack
 
@@ -63,6 +86,7 @@ domus/
     controllers/   request handlers
     middleware/    auth and upload middleware
     routes/        route definitions
+    tests/         automated tests (jest and supertest)
     demo-images/   images used by the demo seed
     schema.sql     database structure (10 tables)
     seed.js        creates the agency, admin and agent
@@ -70,6 +94,8 @@ domus/
     index.js       Express app
   frontend/
     src/           pages, layouts, components, API client, i18n files
+  docs/
+    USER_GUIDE.md  short guide for Admin and Agent users
 ```
 
 ## Run locally
@@ -105,6 +131,28 @@ npm run dev
 ```
 
 The frontend runs on http://localhost:5173 and uses `http://localhost:5000/api` by default.
+
+## Tests
+
+The backend has automated tests written with jest and supertest (15 tests in 3 files: authentication, property access, and inquiry to lead). They run only on a separate local database named `domus_test`; the test setup forces this name and removes `DATABASE_URL`, so the tests cannot reach the main or production database. Each test file creates its own data and deletes it afterwards.
+
+One-time setup:
+
+1. Create an empty database named `domus_test` (for example with `CREATE DATABASE domus_test;`).
+2. Load the schema into it:
+
+```
+psql -U postgres -d domus_test -f backend/schema.sql
+```
+
+Run the tests:
+
+```
+cd backend
+npm test
+```
+
+The jest output may show `injected env` lines from dotenv; they are logs, not failures.
 
 ## Environment variables
 
@@ -165,6 +213,7 @@ Properties (login required)
 Leads (login required)
 
 - `GET /leads`, `POST /leads`, `GET /leads/:id`, `PATCH /leads/:id` (preferences and follow-up date)
+- `GET /leads/:id/matches` returns up to 3 matching properties with a score and a breakdown per criterion (see Match engine)
 - `PATCH /leads/:id/stage`, `POST /leads/:id/activities` (note or call)
 - `PATCH /leads/:id/assign` (Admin)
 
@@ -194,7 +243,7 @@ curl -X POST https://domus-api-mu.vercel.app/api/auth/login \
 
 ## Known limitations
 
-- No automated tests yet.
+- Automated tests cover only authentication, property access and inquiry-to-lead (15 tests). The match engine, visits, deals and lead permissions are not covered by automated tests.
 - No OpenAPI/Swagger documentation; endpoints are listed above.
 - No end-to-end frontend tests.
 - No migration tool; schema changes are manual.
