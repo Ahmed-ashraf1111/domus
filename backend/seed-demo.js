@@ -2,9 +2,9 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 const pool = require("./config/db");
+const { uploadFile, deleteByUrl } = require("./config/cloudinary");
 
 const IMAGES_DIR = path.join(__dirname, "demo-images");
-const UPLOADS_DIR = path.join(__dirname, "uploads");
 
 // the newest listings come first, so the best ones show on the home page
 const PROPERTIES = [
@@ -183,20 +183,10 @@ function slugify(text, index) {
   return base + "-" + (Date.now() + index).toString(36);
 }
 
-// copy one demo image into the uploads folder and return its public url
-function copyImage(fileName) {
-  const newName =
-    "demo-" +
-    Date.now() +
-    "-" +
-    Math.round(Math.random() * 1e6) +
-    "-" +
-    fileName;
-  fs.copyFileSync(
-    path.join(IMAGES_DIR, fileName),
-    path.join(UPLOADS_DIR, newName),
-  );
-  return "/uploads/" + newName;
+// upload one demo image to cloudinary and return its public url
+async function uploadDemoImage(fileName) {
+  const result = await uploadFile(path.join(IMAGES_DIR, fileName));
+  return result.secure_url;
 }
 
 async function seedDemo() {
@@ -249,8 +239,6 @@ async function seedDemo() {
       return;
     }
 
-    if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
-
     await client.query("BEGIN");
 
     const maxId = await client.query(
@@ -298,7 +286,7 @@ async function seedDemo() {
       const propertyId = inserted.rows[0].id;
 
       for (let j = 0; j < p.images.length; j++) {
-        const url = copyImage(p.images[j]);
+        const url = await uploadDemoImage(p.images[j]);
         copied.push(url);
         await client.query(
           `INSERT INTO property_media (property_id, file_url, sort_order, is_cover)
@@ -312,8 +300,8 @@ async function seedDemo() {
     console.log("Demo seed done: " + PROPERTIES.length + " properties added");
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
-    // remove the images copied before the error
-    copied.forEach((url) => fs.unlink(path.join(__dirname, url), () => {}));
+    // remove the images uploaded before the error
+    await Promise.all(copied.map((url) => deleteByUrl(url)));
     console.error("Demo seed failed:", err.message);
   } finally {
     client.release();

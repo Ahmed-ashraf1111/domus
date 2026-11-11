@@ -1,6 +1,5 @@
-const fs = require("fs");
-const path = require("path");
 const pool = require("../config/db");
+const { uploadBuffer, deleteByUrl } = require("../config/cloudinary");
 
 const PURPOSES = ["sale", "rent"];
 const TYPES = ["house", "apartment", "villa", "plot", "commercial"];
@@ -43,10 +42,9 @@ function toNull(value) {
   return value === "" || value === undefined ? null : value;
 }
 
-// fileUrl looks like /uploads/name.jpg
+// fileUrl is the stored image url, old local /uploads/ paths are ignored
 function removeFile(fileUrl) {
-  const filePath = path.join(__dirname, "..", fileUrl);
-  fs.unlink(filePath, () => {});
+  return deleteByUrl(fileUrl);
 }
 
 function validateFields(b, isCreate) {
@@ -385,7 +383,7 @@ async function remove(req, res) {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    media.rows.forEach((row) => removeFile(row.file_url));
+    await Promise.all(media.rows.map((row) => removeFile(row.file_url)));
     res.json({ message: "Property deleted" });
   } catch (err) {
     console.error("Delete property error:", err.message);
@@ -396,8 +394,9 @@ async function remove(req, res) {
 // POST /api/properties/:id/media   (form-data, key: images)
 async function uploadMedia(req, res) {
   const files = req.files || [];
-  const cleanup = () =>
-    files.forEach((f) => removeFile("/uploads/" + f.filename));
+  // urls of images already sent to cloudinary, removed again if something fails
+  const uploadedUrls = [];
+  const cleanup = () => Promise.all(uploadedUrls.map((url) => removeFile(url)));
 
   try {
     const id = parseInt(req.params.id, 10);
@@ -430,10 +429,12 @@ async function uploadMedia(req, res) {
 
     const saved = [];
     for (const file of files) {
+      const uploaded = await uploadBuffer(file.buffer);
+      uploadedUrls.push(uploaded.secure_url);
       const result = await pool.query(
         `INSERT INTO property_media (property_id, file_url, sort_order, is_cover)
          VALUES ($1, $2, $3, $4) RETURNING *`,
-        [id, "/uploads/" + file.filename, order, !hasCover],
+        [id, uploaded.secure_url, order, !hasCover],
       );
       saved.push(result.rows[0]);
       hasCover = true;
@@ -442,7 +443,7 @@ async function uploadMedia(req, res) {
 
     res.status(201).json(saved);
   } catch (err) {
-    cleanup();
+    await cleanup();
     console.error("Upload media error:", err.message);
     res.status(500).json({ message: "Server error" });
   }
@@ -467,7 +468,7 @@ async function deleteMedia(req, res) {
       return res.status(404).json({ message: "Image not found" });
     }
 
-    removeFile(result.rows[0].file_url);
+    await removeFile(result.rows[0].file_url);
 
     // if the cover was deleted, the first remaining image becomes the cover
     if (result.rows[0].is_cover) {

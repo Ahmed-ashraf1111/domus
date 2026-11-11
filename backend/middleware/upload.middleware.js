@@ -1,5 +1,4 @@
 const multer = require("multer");
-const path = require("path");
 
 const allowedTypes = {
   "image/jpeg": ".jpg",
@@ -7,27 +6,19 @@ const allowedTypes = {
   "image/webp": ".webp",
 };
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "..", "uploads"));
-  },
-  filename: (req, file, cb) => {
-    // random name, the extension comes from the mime type not from the user file name
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, unique + allowedTypes[file.mimetype]);
-  },
-});
+// images are kept in memory and sent to cloudinary by the controller
+const storage = multer.memoryStorage();
 
 const uploader = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!allowedTypes[file.mimetype]) {
       return cb(new Error("Only JPG, PNG and WEBP images are allowed"));
     }
     cb(null, true);
   },
-}).array("images", 10);
+}).array("images", 4);
 
 // wrapper so upload errors return a clean 400 message
 function uploadImages(req, res, next) {
