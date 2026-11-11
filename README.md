@@ -246,6 +246,7 @@ curl -X POST https://domus-api-mu.vercel.app/api/auth/login \
 - Automated tests cover only authentication, property access and inquiry-to-lead (15 tests). The match engine, visits, deals and lead permissions are not covered by automated tests.
 - No OpenAPI/Swagger documentation; endpoints are listed above.
 - No end-to-end frontend tests.
+- `npm audit` reports low and moderate issues in development and CLI tooling (jest, nodemon, eslint, shadcn). The backend production dependencies report 0 vulnerabilities (`npm audit --omit=dev`). The remaining ones were not force-fixed because the fixes are breaking changes.
 - No migration tool; schema changes are manual.
 - The inquiry rate limit is kept in memory per serverless instance, so it is not exact on Vercel.
 - The first request after a period of inactivity can be slower (serverless cold start).
