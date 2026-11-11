@@ -347,6 +347,16 @@
     "assign": "Assign",
     "assigned": "Lead assigned",
     "selectAgent": "Select an agent",
+    "matchesTitle": "Best matches",
+    "matchesEmpty": "No available property to suggest",
+    "matchesError": "Could not load the matches",
+    "match": {
+      "budget": "Budget",
+      "city": "City",
+      "type": "Type",
+      "bedrooms": "Bedrooms",
+      "purpose": "Purpose"
+    },
     "timeline": "Activity",
     "notePlaceholder": "Write a note or a call summary",
     "addNote": "Add note",

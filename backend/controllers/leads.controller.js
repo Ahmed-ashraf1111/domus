@@ -441,7 +441,100 @@ async function addActivity(req, res) {
   }
 }
 
+// scoring weights for the match engine (total is 100)
+const MATCH_WEIGHTS = {
+  budget: 35,
+  city: 25,
+  type: 20,
+  bedrooms: 10,
+  purpose: 10,
+};
+
+// returns the score of one property for one lead, with a breakdown
+function scoreProperty(lead, p) {
+  const price = Number(p.price);
+  const min = lead.budget_min === null ? null : Number(lead.budget_min);
+  const max = lead.budget_max === null ? null : Number(lead.budget_max);
+
+  let budget = 0;
+  if (min === null && max === null) {
+    budget = MATCH_WEIGHTS.budget;
+  } else if ((min === null || price >= min) && (max === null || price <= max)) {
+    budget = MATCH_WEIGHTS.budget;
+  } else if (max !== null && price > max && price <= max * 1.1) {
+    // slightly above the maximum budget gets half of the points
+    budget = MATCH_WEIGHTS.budget / 2;
+  }
+
+  const city =
+    !lead.preferred_city ||
+    String(p.city).toLowerCase() === String(lead.preferred_city).toLowerCase()
+      ? MATCH_WEIGHTS.city
+      : 0;
+
+  const type =
+    !lead.property_type || p.property_type === lead.property_type
+      ? MATCH_WEIGHTS.type
+      : 0;
+
+  let bedrooms = 0;
+  if (!lead.preferred_bedrooms) {
+    bedrooms = MATCH_WEIGHTS.bedrooms;
+  } else if (p.bedrooms === lead.preferred_bedrooms) {
+    bedrooms = MATCH_WEIGHTS.bedrooms;
+  } else if (Math.abs(p.bedrooms - lead.preferred_bedrooms) === 1) {
+    bedrooms = MATCH_WEIGHTS.bedrooms / 2;
+  }
+
+  const purpose =
+    !lead.purpose || p.purpose === lead.purpose ? MATCH_WEIGHTS.purpose : 0;
+
+  const breakdown = { budget, city, type, bedrooms, purpose };
+  const score = budget + city + type + bedrooms + purpose;
+  return { score, breakdown };
+}
+
+// GET /api/leads/:id/matches   (best available properties for a lead)
+async function getMatches(req, res) {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ message: "Invalid lead id" });
+
+    const values = [id];
+    const access = accessCondition(req.user, values);
+    const leadResult = await pool.query(
+      `SELECT l.purpose, l.property_type, l.budget_min, l.budget_max,
+              l.preferred_city, l.preferred_bedrooms
+       FROM leads l WHERE l.id = $1 AND ${access}`,
+      values,
+    );
+    if (leadResult.rows.length === 0) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+    const lead = leadResult.rows[0];
+
+    const props = await pool.query(
+      `SELECT id, title, slug, price, currency, city, locality, property_type,
+              purpose, bedrooms
+       FROM properties
+       WHERE agency_id = $1 AND status = 'available' AND is_published = true`,
+      [req.user.agency_id],
+    );
+
+    const matches = props.rows
+      .map((p) => ({ ...p, ...scoreProperty(lead, p) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    res.json({ data: matches });
+  } catch (err) {
+    console.error("Get matches error:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
 module.exports = {
+  getMatches,
   list,
   getOne,
   create,

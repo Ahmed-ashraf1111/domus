@@ -119,6 +119,10 @@ function LeadDetails() {
   const [changingStage, setChangingStage] = useState(false);
 
   const [prefs, setPrefs] = useState(null);
+
+  const [matches, setMatches] = useState([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
+  const [matchesError, setMatchesError] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [note, setNote] = useState("");
@@ -142,6 +146,17 @@ function LeadDetails() {
         else setError(true);
       })
       .finally(() => setLoading(false));
+  }, [id, reloadKey]);
+
+  // best matching properties for this lead, reloaded after preferences change
+  useEffect(() => {
+    setMatchesLoading(true);
+    setMatchesError(false);
+    client
+      .get(`/leads/${id}/matches`)
+      .then((res) => setMatches(res.data.data))
+      .catch(() => setMatchesError(true))
+      .finally(() => setMatchesLoading(false));
   }, [id, reloadKey]);
 
   // only the admin can assign, so only the admin needs the agents list
@@ -482,6 +497,54 @@ function LeadDetails() {
         </div>
 
         <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {t("leads.matchesTitle")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {matchesLoading ? (
+                <>
+                  <Skeleton className="h-20" />
+                  <Skeleton className="h-20" />
+                </>
+              ) : matchesError ? (
+                <p className="text-sm text-destructive">
+                  {t("leads.matchesError")}
+                </p>
+              ) : matches.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("leads.matchesEmpty")}
+                </p>
+              ) : (
+                matches.map((m) => (
+                  <div key={m.id} className="rounded-lg border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link
+                        to={`/app/properties/${m.id}/edit`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {m.title}
+                      </Link>
+                      <Badge variant="secondary">{m.score}%</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {m.locality}, {m.city}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1 text-xs">
+                      {Object.entries(m.breakdown).map(([key, points]) => (
+                        <Badge key={key} variant="outline">
+                          {t(`leads.match.${key}`)}: {points}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">{t("leads.stageTitle")}</CardTitle>

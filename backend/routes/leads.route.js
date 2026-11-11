@@ -9,6 +9,7 @@ router.use(verifyToken);
 router.get("/", controller.list);
 router.post("/", controller.create);
 router.get("/:id", controller.getOne);
+router.get("/:id/matches", controller.getMatches);
 router.patch("/:id", controller.update);
 router.patch("/:id/stage", controller.updateStage);
 router.post("/:id/activities", controller.addActivity);
