@@ -37,6 +37,12 @@ app.use("/api/visits", visitsRoutes);
 app.use("/api/deals", dealsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+// on Vercel the platform runs the app itself, so only listen when running locally
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
