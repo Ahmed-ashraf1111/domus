@@ -528,7 +528,7 @@ function Visits() {
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
+            <div className="sticky -bottom-6 flex justify-end gap-2 bg-background pb-1 pt-3">
               <Button variant="outline" onClick={() => setOpen(false)}>
                 {t("common.cancel")}
               </Button>
