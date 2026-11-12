@@ -478,7 +478,14 @@
     "invalidAmount": "Enter a valid amount",
     "overrideTitle": "Another deal is already booked for this property",
     "overrideText": "As an admin you can continue anyway. Do you want to override?",
-    "overrideConfirm": "Continue anyway"
+    "overrideConfirm": "Continue anyway",
+    "actions": "Actions",
+    "edit": "Edit",
+    "editTitle": "Edit deal",
+    "editSubtitle": "Update the amounts, the close date or the notes.",
+    "agreedAmount": "Agreed amount",
+    "saveChanges": "Save changes",
+    "updated": "Deal updated"
   },
   "amenity": {
     "Parking": "Parking",

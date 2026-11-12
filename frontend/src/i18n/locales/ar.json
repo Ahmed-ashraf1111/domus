@@ -478,7 +478,14 @@
     "invalidAmount": "أدخل مبلغاً صحيحاً",
     "overrideTitle": "توجد صفقة أخرى محجوزة لهذا العقار",
     "overrideText": "بصفتك مديراً يمكنك المتابعة رغم ذلك. هل تريد التجاوز؟",
-    "overrideConfirm": "متابعة رغم ذلك"
+    "overrideConfirm": "متابعة رغم ذلك",
+    "actions": "الإجراءات",
+    "edit": "تعديل",
+    "editTitle": "تعديل الصفقة",
+    "editSubtitle": "حدّث المبالغ أو تاريخ الإغلاق أو الملاحظات.",
+    "agreedAmount": "المبلغ المتفق عليه",
+    "saveChanges": "حفظ التغييرات",
+    "updated": "تم تحديث الصفقة"
   },
   "amenity": {
     "Parking": "موقف سيارات",

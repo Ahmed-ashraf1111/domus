@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, Handshake, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Handshake, Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,13 @@ const EMPTY_FORM = {
   notes: "",
 };
 
+const EMPTY_EDIT = {
+  offer_amount: "",
+  agreed_amount: "",
+  expected_close_date: "",
+  notes: "",
+};
+
 function Field({ label, error, children }) {
   return (
     <div className="flex flex-col gap-2">
@@ -107,6 +114,12 @@ function Deals() {
 
   // admin override confirmation
   const [override, setOverride] = useState(null);
+
+  // edit dialog
+  const [editing, setEditing] = useState(null);
+  const [editForm, setEditForm] = useState(EMPTY_EDIT);
+  const [editErrors, setEditErrors] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
 
   // create dialog
   const [open, setOpen] = useState(false);
@@ -229,6 +242,53 @@ function Deals() {
     }
   };
 
+  const openEdit = (d) => {
+    setEditing(d);
+    setEditForm({
+      offer_amount: d.offer_amount ? String(Number(d.offer_amount)) : "",
+      agreed_amount: d.agreed_amount ? String(Number(d.agreed_amount)) : "",
+      expected_close_date: d.expected_close_date
+        ? String(d.expected_close_date).slice(0, 10)
+        : "",
+      notes: d.notes || "",
+    });
+    setEditErrors({});
+  };
+
+  const setEditField = (name) => (e) => {
+    setEditForm((prev) => ({ ...prev, [name]: e.target.value }));
+    setEditErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const submitEdit = async () => {
+    const found = {};
+    ["offer_amount", "agreed_amount"].forEach((f) => {
+      const v = editForm[f];
+      if (v !== "" && (isNaN(Number(v)) || Number(v) < 0)) {
+        found[f] = t("deals.invalidAmount");
+      }
+    });
+    setEditErrors(found);
+    if (Object.keys(found).length > 0) return;
+
+    setEditSaving(true);
+    try {
+      await client.patch(`/deals/${editing.id}`, {
+        offer_amount: editForm.offer_amount,
+        agreed_amount: editForm.agreed_amount,
+        expected_close_date: editForm.expected_close_date,
+        notes: editForm.notes.trim(),
+      });
+      toast.success(t("deals.updated"));
+      setEditing(null);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err.response?.data?.message || t("deals.updateError"));
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const confirmOverride = () => {
     const pending = override;
     setOverride(null);
@@ -309,6 +369,7 @@ function Deals() {
                 <TableHead>{t("deals.agreed")}</TableHead>
                 <TableHead>{t("deals.closeDate")}</TableHead>
                 <TableHead>{t("deals.stage")}</TableHead>
+                <TableHead>{t("deals.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -369,6 +430,20 @@ function Deals() {
                           ))}
                         </SelectContent>
                       </Select>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {CLOSED_STAGES.includes(d.stage) ? (
+                      <span className="text-muted-foreground">-</span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEdit(d)}
+                      >
+                        <Pencil />
+                        {t("deals.edit")}
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -506,6 +581,75 @@ function Deals() {
               <Button disabled={saving} onClick={submit}>
                 {saving && <Loader2 className="animate-spin" />}
                 {saving ? t("deals.saving") : t("deals.save")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(editing)}
+        onOpenChange={(value) => !value && setEditing(null)}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("deals.editTitle")}</DialogTitle>
+            <DialogDescription>{t("deals.editSubtitle")}</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label={t("deals.offerAmount")}
+                error={editErrors.offer_amount}
+              >
+                <Input
+                  type="number"
+                  min="0"
+                  dir="ltr"
+                  value={editForm.offer_amount}
+                  onChange={setEditField("offer_amount")}
+                />
+              </Field>
+              <Field
+                label={t("deals.agreedAmount")}
+                error={editErrors.agreed_amount}
+              >
+                <Input
+                  type="number"
+                  min="0"
+                  dir="ltr"
+                  value={editForm.agreed_amount}
+                  onChange={setEditField("agreed_amount")}
+                />
+              </Field>
+            </div>
+
+            <Field label={t("deals.expectedClose")}>
+              <Input
+                type="date"
+                dir="ltr"
+                value={editForm.expected_close_date}
+                onChange={setEditField("expected_close_date")}
+              />
+            </Field>
+
+            <Field label={t("deals.notes")}>
+              <Textarea
+                rows={2}
+                value={editForm.notes}
+                placeholder={t("deals.notesPlaceholder")}
+                onChange={setEditField("notes")}
+              />
+            </Field>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                {t("common.cancel")}
+              </Button>
+              <Button disabled={editSaving} onClick={submitEdit}>
+                {editSaving && <Loader2 className="animate-spin" />}
+                {editSaving ? t("deals.saving") : t("deals.saveChanges")}
               </Button>
             </div>
           </div>
