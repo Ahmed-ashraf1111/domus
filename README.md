@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/public/domus-icon.svg" alt="Domus logo" width="80" />
+</p>
+
 # Domus
 
 Domus is a real estate management platform: a public website for browsing published properties, and a staff workspace (CRM) for managing inventory, leads, visits and deals. Admin and Agent roles see different data.
@@ -134,7 +138,7 @@ The frontend runs on http://localhost:5173 and uses `http://localhost:5000/api` 
 
 ## Tests
 
-The backend has automated tests written with jest and supertest (15 tests in 3 files: authentication, property access, and inquiry to lead). They run only on a separate local database named `domus_test`; the test setup forces this name and removes `DATABASE_URL`, so the tests cannot reach the main or production database. Each test file creates its own data and deletes it afterwards.
+The backend has automated tests written with jest and supertest (24 tests in 4 files: authentication, property access, inquiry to lead, and the match engine). They run only on a separate local database named `domus_test`; the test setup forces this name and removes `DATABASE_URL`, so the tests cannot reach the main or production database. Each test file creates its own data and deletes it afterwards.
 
 One-time setup (run from the project root):
 
@@ -241,7 +245,7 @@ curl -X POST https://domus-api-mu.vercel.app/api/auth/login \
 
 ## Known limitations
 
-- Automated tests cover only authentication, property access and inquiry-to-lead (15 tests). The match engine, visits, deals and lead permissions are not covered by automated tests.
+- Automated tests cover authentication, property access, inquiry-to-lead and the match engine (24 tests). Visits, deals and lead permissions are not covered by automated tests.
 - No OpenAPI/Swagger documentation; endpoints are listed above.
 - No end-to-end frontend tests.
 - `npm audit` reports low and moderate issues in development and CLI tooling (jest, nodemon, eslint, shadcn). The backend production dependencies report 0 vulnerabilities (`npm audit --omit=dev`). The remaining ones were not force-fixed because the fixes are breaking changes.
