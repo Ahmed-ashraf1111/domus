@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="../frontend/public/domus-icon-light.svg" />
+    <img src="../frontend/public/domus-icon.svg" alt="Domus logo" width="64" />
+  </picture>
+</p>
+
 # Domus User Guide
 
 This guide explains how to use the Domus staff workspace. It is written for two roles: Admin and Agent.
