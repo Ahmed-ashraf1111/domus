@@ -38,10 +38,10 @@ Staff workspace
 
 - Login with JWT, protected routes and role permissions (Admin and Agent)
 - Property inventory: create, edit, publish/unpublish, delete, sale or rent, image upload with cover image
-- Leads: list, details, stages, notes and calls, preferences, assignment to an agent (Admin only)
+- Leads: list, details, stages, notes and calls, preferences, assignment to an agent (Admin only), create a lead manually (Add lead dialog; an Agent's lead is assigned to himself, an Admin can choose the agent)
 - Match engine: the lead details page shows the 3 best matching properties with a score out of 100 (see Match engine below)
 - Visits: schedule, status updates, conflict warning when the same agent already has a visit at that time
-- Deals: linked to property, lead and agent, with stages and an Admin override when a property is already booked
+- Deals: linked to property, lead and agent, with stages and an Admin override when a property is already booked; edit amounts, close date and notes of open deals
 - Dashboard with counts and charts
 - Staff management (Admin only)
 - English and Arabic with full RTL support, dark and light mode
@@ -141,7 +141,7 @@ The frontend runs on http://localhost:5173 and uses `http://localhost:5000/api` 
 
 ## Tests
 
-The backend has automated tests written with jest and supertest (24 tests in 4 files: authentication, property access, inquiry to lead, and the match engine). They run only on a separate local database named `domus_test`; the test setup forces this name and removes `DATABASE_URL`, so the tests cannot reach the main or production database. Each test file creates its own data and deletes it afterwards.
+The backend has automated tests written with jest and supertest (55 tests in 7 files: authentication, property access, inquiry to lead, match engine, lead permissions, visits, deals). They run only on a separate local database named `domus_test`; the test setup forces this name and removes `DATABASE_URL`, so the tests cannot reach the main or production database. Each test file creates its own data and deletes it afterwards.
 
 One-time setup (run from the project root):
 
@@ -248,7 +248,7 @@ curl -X POST https://domus-api-mu.vercel.app/api/auth/login \
 
 ## Known limitations
 
-- Automated tests cover authentication, property access, inquiry-to-lead and the match engine (24 tests). Visits, deals and lead permissions are not covered by automated tests.
+- Automated tests cover authentication, property access, inquiry-to-lead, the match engine, lead permissions, visits and deals (55 tests). Dashboard counts, staff management and media upload are not covered by automated tests.
 - No OpenAPI/Swagger documentation; endpoints are listed above.
 - No end-to-end frontend tests.
 - `npm audit` reports low and moderate issues in development and CLI tooling (jest, nodemon, eslint, shadcn). The backend production dependencies report 0 vulnerabilities (`npm audit --omit=dev`). The remaining ones were not force-fixed because the fixes are breaking changes.
@@ -257,7 +257,7 @@ curl -X POST https://domus-api-mu.vercel.app/api/auth/login \
 - The first request after a period of inactivity is slower (serverless cold start, plus the free Neon database scales to zero after 5 minutes without activity).
 - Visit conflict checking and booking are not inside one transaction, so two simultaneous requests could both pass.
 - The public part assumes a single agency (general inquiries go to the first agency).
-- `POST /leads`, `PATCH /deals/:id` and the visit `outcome` field exist in the API but have no screen in the frontend.
+- The visit `outcome` field exists in the API but has no screen in the frontend.
 - Activity texts created by the backend (for example "Lead assigned to ...") are English only, even in Arabic mode.
 - Property descriptions are stored in one language and are not translated.
 - Uploads are limited to 4 MB per file and 4 files per request because of Vercel's request size limit.

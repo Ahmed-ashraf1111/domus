@@ -51,13 +51,14 @@ The property status (available, reserved, sold, rented) also changes automatical
 ### Leads
 
 1. Open Leads from the sidebar. Search by name, phone or email, and filter by stage or agent.
-2. Click a lead to open its details page.
-3. Assign the lead: in the Assigned agent card, choose an agent and click Assign.
-4. Change the stage from the Stage card.
-5. Edit the client preferences (purpose, property type, budget, preferred city, bedrooms, next follow-up) and click Save preferences.
-6. Add a note or log a call in the Activity card. Every stage change, assignment and visit is also recorded there.
+2. To add a lead yourself (for example a phone call or a walk-in client), click Add lead. Enter the full name and a phone number or an email (at least one is required). You can also fill in the purpose, property type, budget, preferred city, bedrooms and a message, and choose an agent or leave it as No agent. Click Create lead.
+3. Click a lead to open its details page.
+4. Assign the lead: in the Assigned agent card, choose an agent and click Assign.
+5. Change the stage from the Stage card.
+6. Edit the client preferences (purpose, property type, budget, preferred city, bedrooms, next follow-up) and click Save preferences.
+7. Add a note or log a call in the Activity card. Every stage change, assignment and visit is also recorded there.
 
-Every inquiry from the public website creates a lead. If the inquiry is about a property that has an agent, the lead is assigned to that agent automatically. General inquiries from the Contact page stay unassigned until an Admin assigns them.
+Every inquiry from the public website creates a lead. If the inquiry is about a property that has an agent, the lead is assigned to that agent automatically. General inquiries from the Contact page stay unassigned until an Admin assigns them. Leads added with the Add lead button have the source Manual.
 
 ### Best matches
 
@@ -84,11 +85,12 @@ When a visit is linked to a client in an early stage, the lead moves to Visit sc
 
 1. Open Deals from the sidebar and click New deal.
 2. Choose the property, the client (optional), the agent and the offer amount, then click Create deal.
-3. Move the deal through its stages: Offer, Booking, Closed won or Closed lost.
-4. Booking marks the property as Reserved. Closed won marks it as Sold or Rented and marks the lead as Converted.
-5. If another deal is already booked for the same property, an Admin sees a confirmation window and can choose Continue anyway.
+3. To change an open deal, click Edit in the Actions column. You can update the offer amount, the agreed amount, the expected close date and the notes, then click Save changes.
+4. Move the deal through its stages: Offer, Booking, Closed won or Closed lost.
+5. Booking marks the property as Reserved. Closed won marks it as Sold or Rented and marks the lead as Converted.
+6. If another deal is already booked for the same property, an Admin sees a confirmation window and can choose Continue anyway.
 
-Closed deals cannot be edited or moved to another stage.
+Closed deals cannot be edited or moved to another stage, so they have no Edit button.
 
 ### Staff
 
@@ -102,9 +104,9 @@ Closed deals cannot be edited or moved to another stage.
 An Agent works with their own records only.
 
 1. Properties: browse the inventory and open any property. Agents cannot add, edit or delete properties.
-2. Leads: open the leads assigned to you, add notes, log calls, update preferences and move the stage. Agents cannot assign leads to other agents.
+2. Leads: open the leads assigned to you, add notes, log calls, update preferences and move the stage. You can also add a lead with the Add lead button; it is assigned to you automatically. Agents cannot assign leads to other agents.
 3. Visits: schedule visits for yourself and mark them Complete, Cancel or No show. You can only link clients who are assigned to you.
-4. Deals: create deals for your clients and move them through the stages. You only see your own deals.
+4. Deals: create deals for your clients, edit your own open deals with the Edit button, and move them through the stages. You only see your own deals.
 5. Best matches: use the card on each lead to suggest properties to the client.
 
 If you open a page or a record you are not allowed to see, you will see an Access denied page or a Not found message.
