@@ -45,9 +45,8 @@ function PublicLayout() {
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">
-              D
-            </div>
+            <img src="/domus-icon.svg" alt="" className="size-9 dark:hidden" />
+            <img src="/domus-icon-light.svg" alt="" className="hidden size-9 dark:block" />
             <span className="text-lg font-semibold">{t("common.appName")}</span>
           </Link>
 
@@ -136,9 +135,7 @@ function PublicLayout() {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-3">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary font-bold text-sidebar-primary-foreground">
-                D
-              </div>
+              <img src="/domus-icon-light.svg" alt="" className="size-9" />
               <span className="text-lg font-semibold">
                 {agency?.name || t("common.appName")}
               </span>

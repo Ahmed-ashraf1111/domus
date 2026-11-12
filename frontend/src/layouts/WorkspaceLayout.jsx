@@ -95,9 +95,7 @@ function WorkspaceLayout() {
         )}
       >
         <div className="flex h-16 items-center gap-3 px-5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary font-bold text-sidebar-primary-foreground">
-            D
-          </div>
+          <img src="/domus-icon-light.svg" alt="" className="size-9 shrink-0" />
           <span
             className={cn(
               "text-lg font-semibold",

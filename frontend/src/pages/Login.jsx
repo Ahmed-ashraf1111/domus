@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Languages, Loader2, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +13,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 function Login() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isRtl = i18n.language === "ar";
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -46,7 +49,46 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-4">
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/">
+            <ArrowLeft className="rtl:rotate-180" />
+            {t("nav.home")}
+          </Link>
+        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => i18n.changeLanguage(isRtl ? "en" : "ar")}
+            aria-label={t("common.language")}
+          >
+            <Languages />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label={
+              theme === "dark" ? t("common.lightMode") : t("common.darkMode")
+            }
+          >
+            {theme === "dark" ? <Sun /> : <Moon />}
+          </Button>
+        </div>
+      </div>
+
+      <Link to="/" className="flex items-center gap-3">
+        <img src="/domus-icon.svg" alt="" className="size-10 dark:hidden" />
+        <img
+          src="/domus-icon-light.svg"
+          alt=""
+          className="hidden size-10 dark:block"
+        />
+        <span className="text-xl font-semibold">{t("common.appName")}</span>
+      </Link>
+
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">{t("auth.title")}</CardTitle>
