@@ -100,12 +100,12 @@ domus/
 
 ## Run locally
 
-Requirements: Node.js, PostgreSQL, a Cloudinary account (only needed for image upload and the demo seed).
+Requirements: Node.js, PostgreSQL (the `psql` command must be available), a Cloudinary account (only needed for image upload and the demo seed).
 
-1. Create the database and load the schema:
+1. Create the database and load the schema (run from the project root):
 
 ```
-createdb -U postgres domus
+psql -U postgres -c "CREATE DATABASE domus;"
 psql -U postgres -d domus -f backend/schema.sql
 ```
 
@@ -136,12 +136,10 @@ The frontend runs on http://localhost:5173 and uses `http://localhost:5000/api` 
 
 The backend has automated tests written with jest and supertest (15 tests in 3 files: authentication, property access, and inquiry to lead). They run only on a separate local database named `domus_test`; the test setup forces this name and removes `DATABASE_URL`, so the tests cannot reach the main or production database. Each test file creates its own data and deletes it afterwards.
 
-One-time setup:
-
-1. Create an empty database named `domus_test` (for example with `CREATE DATABASE domus_test;`).
-2. Load the schema into it:
+One-time setup (run from the project root):
 
 ```
+psql -U postgres -c "CREATE DATABASE domus_test;"
 psql -U postgres -d domus_test -f backend/schema.sql
 ```
 
@@ -179,11 +177,11 @@ The schema is a single `schema.sql` file with 10 tables: agencies, users, proper
 
 ## Deployment (Neon + Vercel + Cloudinary)
 
-1. Neon: create a project, copy the direct connection string, then load the schema: `psql "<connection string>" -f backend/schema.sql`.
+1. Neon: create a project and load the schema with the direct connection string: `psql "<direct connection string>" -f backend/schema.sql`. For the running API use the pooled connection string (the host contains `-pooler`) as `DATABASE_URL`.
 2. Run the seeds against Neon from a terminal where `DATABASE_URL` (and `CLOUDINARY_URL` for the demo seed) is set: `node seed.js` and `node seed-demo.js`.
-3. Vercel API project: root directory `backend`, framework preset Express (`backend/vercel.json` routes everything to `index.js`). Add `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN` (the frontend URL) and `CLOUDINARY_URL`.
+3. Vercel API project: root directory `backend`, framework preset Express (`backend/vercel.json` routes everything to `index.js`). Set the Function Region (Settings, Functions) to the region closest to the database; the demo uses Frankfurt (fra1) to match Neon in eu-central-1. Add `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN` (the frontend URL) and `CLOUDINARY_URL`.
 4. Vercel frontend project: root directory `frontend`, preset Vite (`frontend/vercel.json` rewrites all paths to `index.html`). Add `VITE_API_URL` pointing to the API URL plus `/api`.
-5. Redeploy after changing any environment variable.
+5. Redeploy after changing any environment variable or the Function Region.
 
 Images are stored on Cloudinary because Vercel functions have a read-only filesystem.
 
@@ -249,7 +247,7 @@ curl -X POST https://domus-api-mu.vercel.app/api/auth/login \
 - `npm audit` reports low and moderate issues in development and CLI tooling (jest, nodemon, eslint, shadcn). The backend production dependencies report 0 vulnerabilities (`npm audit --omit=dev`). The remaining ones were not force-fixed because the fixes are breaking changes.
 - No migration tool; schema changes are manual.
 - The inquiry rate limit is kept in memory per serverless instance, so it is not exact on Vercel.
-- The first request after a period of inactivity can be slower (serverless cold start).
+- The first request after a period of inactivity is slower (serverless cold start, plus the free Neon database scales to zero after 5 minutes without activity).
 - Visit conflict checking and booking are not inside one transaction, so two simultaneous requests could both pass.
 - The public part assumes a single agency (general inquiries go to the first agency).
 - `POST /leads`, `PATCH /deals/:id` and the visit `outcome` field exist in the API but have no screen in the frontend.
