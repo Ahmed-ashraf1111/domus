@@ -1,14 +1,16 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import Properties from "@/pages/Properties";
-import PropertyForm from "@/pages/PropertyForm";
-import Leads from "@/pages/Leads";
-import LeadDetails from "@/pages/LeadDetails";
-import Visits from "@/pages/Visits";
-import Deals from "@/pages/Deals";
-import Staff from "@/pages/Staff";
-import StaffForm from "@/pages/StaffForm";
+// workspace pages are loaded only when they are opened
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Properties = lazy(() => import("@/pages/Properties"));
+const PropertyForm = lazy(() => import("@/pages/PropertyForm"));
+const Leads = lazy(() => import("@/pages/Leads"));
+const LeadDetails = lazy(() => import("@/pages/LeadDetails"));
+const Visits = lazy(() => import("@/pages/Visits"));
+const Deals = lazy(() => import("@/pages/Deals"));
+const Staff = lazy(() => import("@/pages/Staff"));
+const StaffForm = lazy(() => import("@/pages/StaffForm"));
 import ErrorPage from "@/pages/ErrorPage";
 import WorkspaceLayout from "@/layouts/WorkspaceLayout";
 import PublicLayout from "@/layouts/PublicLayout";
@@ -33,6 +35,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
 function App() {
   return (
+    <Suspense fallback={null}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
@@ -99,6 +102,7 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </Suspense>
   );
 }
 
