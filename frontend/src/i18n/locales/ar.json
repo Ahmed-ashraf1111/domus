@@ -375,7 +375,21 @@
     "sourceValue": {
       "website": "الموقع",
       "manual": "يدوي"
-    }
+    },
+    "addLead": "إضافة عميل",
+    "dialogTitle": "إضافة عميل محتمل",
+    "dialogSubtitle": "أدخل بيانات العميل. الهاتف أو البريد مطلوب.",
+    "fullName": "الاسم الكامل",
+    "required": "هذا الحقل مطلوب",
+    "contactRequired": "أدخل رقم هاتف أو بريداً إلكترونياً",
+    "invalidEmail": "أدخل بريداً إلكترونياً صحيحاً",
+    "invalidBudget": "أدخل مبلغاً صحيحاً",
+    "budgetOrder": "يجب أن تكون أعلى ميزانية أكبر من الأقل",
+    "optional": "اختياري",
+    "createLead": "إنشاء العميل",
+    "created_ok": "تم إنشاء العميل",
+    "createError": "تعذر إنشاء العميل",
+    "noAgent": "بدون وكيل"
   },
   "visits": {
     "title": "المعاينات",

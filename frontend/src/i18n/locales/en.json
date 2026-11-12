@@ -375,7 +375,21 @@
     "sourceValue": {
       "website": "Website",
       "manual": "Manual"
-    }
+    },
+    "addLead": "Add lead",
+    "dialogTitle": "Add a lead",
+    "dialogSubtitle": "Enter the client details. Phone or email is required.",
+    "fullName": "Full name",
+    "required": "This field is required",
+    "contactRequired": "Enter a phone number or an email",
+    "invalidEmail": "Enter a valid email",
+    "invalidBudget": "Enter a valid amount",
+    "budgetOrder": "Maximum budget must be above the minimum",
+    "optional": "Optional",
+    "createLead": "Create lead",
+    "created_ok": "Lead created",
+    "createError": "Could not create the lead",
+    "noAgent": "No agent"
   },
   "visits": {
     "title": "Visits",

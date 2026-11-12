@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, Search, Users } from "lucide-react";
+import { AlertCircle, Loader2, Plus, Search, Users } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -26,7 +36,34 @@ import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 const ALL = "all";
+const NONE = "none";
 const PAGE_SIZE = 10;
+const PURPOSES = ["sale", "rent"];
+const TYPES = ["house", "apartment", "villa", "plot", "commercial"];
+
+const EMPTY_FORM = {
+  full_name: "",
+  phone: "",
+  email: "",
+  purpose: NONE,
+  property_type: NONE,
+  budget_min: "",
+  budget_max: "",
+  preferred_city: "",
+  preferred_bedrooms: "",
+  assigned_agent_id: NONE,
+  message: "",
+};
+
+function Field({ label, error, children }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label>{label}</Label>
+      {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
 
 const STAGES = [
   "new",
@@ -97,6 +134,12 @@ function Leads() {
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
 
+  // add lead dialog
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+
   // the agents list is only needed for the admin filter
   useEffect(() => {
     if (!isAdmin) return;
@@ -142,6 +185,89 @@ function Leads() {
     setPage(1);
   };
 
+  const openDialog = () => {
+    setForm(EMPTY_FORM);
+    setErrors({});
+    setOpen(true);
+  };
+
+  const setField = (name) => (valueOrEvent) => {
+    const value = valueOrEvent?.target
+      ? valueOrEvent.target.value
+      : valueOrEvent;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const validate = () => {
+    const found = {};
+    if (!form.full_name.trim()) found.full_name = t("leads.required");
+    if (!form.phone.trim() && !form.email.trim()) {
+      found.phone = t("leads.contactRequired");
+    }
+    if (form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email.trim())) {
+      found.email = t("leads.invalidEmail");
+    }
+    ["budget_min", "budget_max"].forEach((f) => {
+      if (form[f] !== "" && (isNaN(Number(form[f])) || Number(form[f]) < 0)) {
+        found[f] = t("leads.invalidBudget");
+      }
+    });
+    if (
+      !found.budget_min &&
+      !found.budget_max &&
+      form.budget_min !== "" &&
+      form.budget_max !== "" &&
+      Number(form.budget_max) < Number(form.budget_min)
+    ) {
+      found.budget_max = t("leads.budgetOrder");
+    }
+    if (
+      form.preferred_bedrooms !== "" &&
+      (!Number.isInteger(Number(form.preferred_bedrooms)) ||
+        Number(form.preferred_bedrooms) < 0)
+    ) {
+      found.preferred_bedrooms = t("leads.invalidBudget");
+    }
+    setErrors(found);
+    return Object.keys(found).length === 0;
+  };
+
+  const submit = async () => {
+    if (!validate()) return;
+
+    const payload = { full_name: form.full_name.trim() };
+    if (form.phone.trim()) payload.phone = form.phone.trim();
+    if (form.email.trim()) payload.email = form.email.trim();
+    if (form.purpose !== NONE) payload.purpose = form.purpose;
+    if (form.property_type !== NONE) payload.property_type = form.property_type;
+    if (form.budget_min !== "") payload.budget_min = Number(form.budget_min);
+    if (form.budget_max !== "") payload.budget_max = Number(form.budget_max);
+    if (form.preferred_city.trim()) {
+      payload.preferred_city = form.preferred_city.trim();
+    }
+    if (form.preferred_bedrooms !== "") {
+      payload.preferred_bedrooms = Number(form.preferred_bedrooms);
+    }
+    if (form.message.trim()) payload.message = form.message.trim();
+    if (isAdmin && form.assigned_agent_id !== NONE) {
+      payload.assigned_agent_id = Number(form.assigned_agent_id);
+    }
+
+    setSaving(true);
+    try {
+      await client.post("/leads", payload);
+      toast.success(t("leads.created_ok"));
+      setOpen(false);
+      setPage(1);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err.response?.data?.message || t("leads.createError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const stageOptions = STAGES.map((v) => ({
     value: v,
     label: t(`stages.${v}`),
@@ -153,9 +279,15 @@ function Leads() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("leads.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("leads.subtitle")}</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{t("leads.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("leads.subtitle")}</p>
+        </div>
+        <Button onClick={openDialog}>
+          <Plus />
+          {t("leads.addLead")}
+        </Button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -294,6 +426,162 @@ function Leads() {
           </div>
         </div>
       )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("leads.dialogTitle")}</DialogTitle>
+            <DialogDescription>{t("leads.dialogSubtitle")}</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <Field label={t("leads.fullName")} error={errors.full_name}>
+              <Input
+                value={form.full_name}
+                onChange={setField("full_name")}
+              />
+            </Field>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("leads.phone")} error={errors.phone}>
+                <Input
+                  dir="ltr"
+                  value={form.phone}
+                  onChange={setField("phone")}
+                />
+              </Field>
+              <Field label={t("leads.email")} error={errors.email}>
+                <Input
+                  type="email"
+                  dir="ltr"
+                  value={form.email}
+                  onChange={setField("email")}
+                />
+              </Field>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("leads.purpose")}>
+                <Select
+                  value={form.purpose}
+                  onValueChange={setField("purpose")}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("leads.any")}</SelectItem>
+                    {PURPOSES.map((v) => (
+                      <SelectItem key={v} value={v}>
+                        {t(`propertyPurpose.${v}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label={t("leads.propertyType")}>
+                <Select
+                  value={form.property_type}
+                  onValueChange={setField("property_type")}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("leads.any")}</SelectItem>
+                    {TYPES.map((v) => (
+                      <SelectItem key={v} value={v}>
+                        {t(`propertyType.${v}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("leads.budgetMin")} error={errors.budget_min}>
+                <Input
+                  type="number"
+                  dir="ltr"
+                  min="0"
+                  value={form.budget_min}
+                  onChange={setField("budget_min")}
+                />
+              </Field>
+              <Field label={t("leads.budgetMax")} error={errors.budget_max}>
+                <Input
+                  type="number"
+                  dir="ltr"
+                  min="0"
+                  value={form.budget_max}
+                  onChange={setField("budget_max")}
+                />
+              </Field>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("leads.city")}>
+                <Input
+                  value={form.preferred_city}
+                  onChange={setField("preferred_city")}
+                />
+              </Field>
+              <Field
+                label={t("leads.bedrooms")}
+                error={errors.preferred_bedrooms}
+              >
+                <Input
+                  type="number"
+                  dir="ltr"
+                  min="0"
+                  value={form.preferred_bedrooms}
+                  onChange={setField("preferred_bedrooms")}
+                />
+              </Field>
+            </div>
+
+            {isAdmin && (
+              <Field label={t("leads.agent")}>
+                <Select
+                  value={form.assigned_agent_id}
+                  onValueChange={setField("assigned_agent_id")}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("leads.noAgent")}</SelectItem>
+                    {agents.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+
+            <Field label={t("leads.message")}>
+              <Textarea
+                rows={2}
+                value={form.message}
+                onChange={setField("message")}
+              />
+            </Field>
+
+            <div className="sticky -bottom-6 flex justify-end gap-2 bg-background pb-1 pt-3">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button disabled={saving} onClick={submit}>
+                {saving && <Loader2 className="animate-spin" />}
+                {saving ? t("leads.saving") : t("leads.createLead")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
